@@ -26,7 +26,7 @@
 
 ### Releases v1.12.0
 
-1. Initial coding to port [AsyncHTTPRequest_ESP32_Ethernet](https://github.com/khoih-prog/AsyncHTTPRequest_ESP32_Ethernet) to `ESP32/S2/S3/C3` boards using `LwIP W5500 / ENC28J60 / LAN8720 Ethernet`
+1. Initial coding to port [AsyncHTTPRequest_Generic](https://github.com/khoih-prog/AsyncHTTPRequest_Generic) to `ESP32/S2/S3/C3` boards using `LwIP W5500 / ENC28J60 / LAN8720 Ethernet`
 2. Use `allman astyle`
 3. Sync with [AsyncHTTPRequest_Generic v1.12.0](https://github.com/khoih-prog/AsyncHTTPRequest_Generic)
 

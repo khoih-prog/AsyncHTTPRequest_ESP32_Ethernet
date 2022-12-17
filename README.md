@@ -16,7 +16,7 @@
 
 ## Table of Contents
 
-* [Why do we need the new AsyncHTTPRequest_ESP32_Ethernet library](#why-do-we-need-this-AsyncHTTPRequest_ESP32_Ethernet-library)
+* [Why do we need this AsyncHTTPRequest_ESP32_Ethernet library](#why-do-we-need-this-AsyncHTTPRequest_ESP32_Ethernet-library)
   * [Features](#features)
   * [Supports](#supports)
   * [Principles of operation](#principles-of-operation)
@@ -73,7 +73,7 @@
 ---
 
 
-## Why do we need this Async [AsyncHTTPRequest_ESP32_Ethernet library](https://github.com/khoih-prog/AsyncHTTPRequest_ESP32_Ethernet)
+## Why do we need this [AsyncHTTPRequest_ESP32_Ethernet](https://github.com/khoih-prog/AsyncHTTPRequest_ESP32_Ethernet) library
 
 ### Features
 
@@ -610,14 +610,14 @@ Submit issues to: [AsyncHTTPRequest_ESP32_Ethernet issues](https://github.com/kh
 
 ---
 
-## TO DO
+### TO DO
 
  1. Fix bug. Add enhancement
  2. Add support to more `LwIP Ethernet` shields
  3. Add support to more boards `ESP32_S2` and `ESP32_C3`
 
 
-## DONE
+### DONE
 
  1. Initially add support to `ESP32/S2/S3/C3` boards using `LwIP W5500 / ENC28J60 / LAN8720 Ethernet`
  2. Sync with [AsyncHTTPRequest_Generic v1.12.0](https://github.com/khoih-prog/AsyncHTTPRequest_Generic)

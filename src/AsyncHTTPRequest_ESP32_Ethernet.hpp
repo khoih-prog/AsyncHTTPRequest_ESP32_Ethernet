@@ -18,11 +18,12 @@
   You should have received a copy of the GNU General Public License along with this program.
   If not, see <https://www.gnu.org/licenses/>.
 
-  Version: 1.12.0
+  Version: 1.13.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.12.0   K Hoang     16/12/2022 Initial coding to port to ESP32S3 boards using LwIP W5500 or ENC28J60 Ethernet
+  1.13.0   K Hoang     21/12/2022 Add support to ESP32S2/C3 boards using LwIP W5500 or ENC28J60 Ethernet
  *****************************************************************************************************************************/
 
 #pragma once
@@ -32,13 +33,13 @@
 
 ////////////////////////////////////////
 
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION            "AsyncHTTPRequest_ESP32_Ethernet v1.12.0"
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION            "AsyncHTTPRequest_ESP32_Ethernet v1.13.0"
 
 #define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MAJOR      1
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MINOR      12
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MINOR      13
 #define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_PATCH      0
 
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_INT        1012000
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_INT        1013000
 
 ////////////////////////////////////////
 
@@ -80,40 +81,15 @@
 
 ////////////////////////////////////////
 
-#if ESP32
+#include <AsyncTCP.h>
 
-  #include <AsyncTCP.h>
-  
-  // KH mod
-  #define MUTEX_LOCK_NR           if (xSemaphoreTakeRecursive(threadLock,portMAX_DELAY) != pdTRUE) { return;}
-  #define MUTEX_LOCK(returnVal)   if (xSemaphoreTakeRecursive(threadLock,portMAX_DELAY) != pdTRUE) { return returnVal;}
-  
-  #define _AHTTP_lock       xSemaphoreTakeRecursive(threadLock,portMAX_DELAY)
-  #define _AHTTP_unlock     xSemaphoreGiveRecursive(threadLock)
-  
-#elif ESP8266
+// KH mod
+#define MUTEX_LOCK_NR           if (xSemaphoreTakeRecursive(threadLock,portMAX_DELAY) != pdTRUE) { return;}
+#define MUTEX_LOCK(returnVal)   if (xSemaphoreTakeRecursive(threadLock,portMAX_DELAY) != pdTRUE) { return returnVal;}
 
-  #include <ESPAsyncTCP.h>
+#define _AHTTP_lock       xSemaphoreTakeRecursive(threadLock,portMAX_DELAY)
+#define _AHTTP_unlock     xSemaphoreGiveRecursive(threadLock)
   
-  #define MUTEX_LOCK_NR
-  #define MUTEX_LOCK(returnVal)
-  
-  #define _AHTTP_lock
-  #define _AHTTP_unlock
-  
-#elif ( defined(STM32F0) || defined(STM32F1) || defined(STM32F2) || defined(STM32F3) ||defined(STM32F4)  || \
-        defined(STM32F7) || defined(STM32L0) || defined(STM32L1) || defined(STM32L4) || defined(STM32H7) || \
-        defined(STM32G0) || defined(STM32G4) || defined(STM32WB) || defined(STM32MP1) )
-       
-  #include "STM32AsyncTCP.h"
-  
-  #define MUTEX_LOCK_NR
-  #define MUTEX_LOCK(returnVal)
-  #define _AHTTP_lock
-  #define _AHTTP_unlock
-  
-#endif
-
 ////////////////////////////////////////
 
 #include <pgmspace.h>
@@ -324,12 +300,10 @@ class AsyncHTTPRequest
     void        setReqHeader(const char* name, const char* value);      // add a request header
     void        setReqHeader(const char* name, int32_t value);          // overload to use integer value
     
-#if (ESP32 || ESP8266)
     void        setReqHeader(const char* name, const __FlashStringHelper* value);
     void        setReqHeader(const __FlashStringHelper *name, const char* value);
     void        setReqHeader(const __FlashStringHelper *name, const __FlashStringHelper* value);
     void        setReqHeader(const __FlashStringHelper *name, int32_t value);
-#endif
 
     bool        send();                                                 // Send the request (GET)
     bool        send(const String& body);                               // Send the request (POST)
@@ -347,10 +321,8 @@ class AsyncHTTPRequest
     
     bool        respHeaderExists(const char* name);                     // Does header exist by name?
     
-#if (ESP32 || ESP8266)
     char*       respHeaderValue(const __FlashStringHelper *name);
     bool        respHeaderExists(const __FlashStringHelper *name);
-#endif
     
     String      headers();                                              // Return all headers as String
 
@@ -409,9 +381,7 @@ class AsyncHTTPRequest
     onDataCB        _onDataCB;                  // optional callback when data received
     void*           _onDataCBarg;               // associated user argument
 
-#ifdef ESP32
     SemaphoreHandle_t threadLock;
-#endif
 
     // request and response String buffers and header list (same queue for request and response).
 
@@ -433,9 +403,7 @@ class AsyncHTTPRequest
     size_t      _send();
     void        _setReadyState(reqStates);
     
-#if (ESP32 || ESP8266)    
     char*       _charstar(const __FlashStringHelper *str);
-#endif
 
     // callbacks
 

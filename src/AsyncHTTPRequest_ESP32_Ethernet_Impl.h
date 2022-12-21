@@ -18,11 +18,12 @@
   You should have received a copy of the GNU General Public License along with this program.
   If not, see <https://www.gnu.org/licenses/>.
 
-  Version: 1.12.0
+  Version: 1.13.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.12.0   K Hoang     16/12/2022 Initial coding to port to ESP32S3 boards using LwIP W5500 or ENC28J60 Ethernet
+  1.13.0   K Hoang     21/12/2022 Add support to ESP32S2/C3 boards using LwIP W5500 or ENC28J60 Ethernet
  *****************************************************************************************************************************/
 
 #pragma once
@@ -443,9 +444,7 @@ AsyncHTTPRequest::AsyncHTTPRequest(): _readyState(readyStateUnsent), _HTTPcode(0
   , _readyStateChangeCB(nullptr), _readyStateChangeCBarg(nullptr), _onDataCB(nullptr), _onDataCBarg(nullptr)
   , _request(nullptr), _response(nullptr), _chunks(nullptr), _headers(nullptr)
 {
-#ifdef ESP32
   threadLock = xSemaphoreCreateRecursiveMutex();
-#endif
 }
 
 ////////////////////////////////////////
@@ -463,15 +462,11 @@ AsyncHTTPRequest::~AsyncHTTPRequest()
   SAFE_DELETE(_chunks)
   SAFE_DELETE_ARRAY(_connectedHost)
 
-#ifdef ESP32
-
   // KH add
   if (threadLock)
   {
     vSemaphoreDelete(threadLock);
   }
-
-#endif
 }
 
 ////////////////////////////////////////
@@ -1018,12 +1013,10 @@ String AsyncHTTPRequest::responseText()
 
 ////////////////////////////////////////
 
-#if (ESP32)
-  #define GLOBAL_STR_LEN      (32 * 1024)
-#elif (ESP8266)
-  #define GLOBAL_STR_LEN      (16 * 1024)
+#if USING_ESP32_C3
+  #define GLOBAL_STR_LEN      (8 * 1024)
 #else
-  #define GLOBAL_STR_LEN      (4 * 1024)
+  #define GLOBAL_STR_LEN      (32 * 1024)
 #endif
 
 ////////////////////////////////////////
@@ -1741,10 +1734,6 @@ void AsyncHTTPRequest::setReqHeader(const char* name, int32_t value)
 }
 ////////////////////////////////////////
 
-#if ( defined(ESP32) || defined(ESP8266) )
-
-////////////////////////////////////////
-
 void AsyncHTTPRequest::setReqHeader(const char* name, const __FlashStringHelper* value)
 {
   if (_readyState <= readyStateOpened && _headers)
@@ -1796,9 +1785,6 @@ void AsyncHTTPRequest::setReqHeader(const __FlashStringHelper *name, int32_t val
     SAFE_DELETE_ARRAY(_name)
   }
 }
-////////////////////////////////////////
-
-#endif
 
 ////////////////////////////////////////
 
@@ -1881,10 +1867,6 @@ bool AsyncHTTPRequest::respHeaderExists(const char* name)
 
 ////////////////////////////////////////
 
-#if ( defined(ESP32) || defined(ESP8266) )
-
-////////////////////////////////////////
-
 char* AsyncHTTPRequest::respHeaderValue(const __FlashStringHelper *name)
 {
   if (_readyState < readyStateHdrsRecvd)
@@ -1918,9 +1900,6 @@ bool AsyncHTTPRequest::respHeaderExists(const __FlashStringHelper *name)
 
   return true;
 }
-////////////////////////////////////////
-
-#endif
 
 ////////////////////////////////////////
 
@@ -2051,10 +2030,6 @@ AsyncHTTPRequest::header* AsyncHTTPRequest::_getHeader(int ndx)
 }
 ////////////////////////////////////////
 
-#if ( defined(ESP32) || defined(ESP8266) )
-
-////////////////////////////////////////
-
 char* AsyncHTTPRequest::_charstar(const __FlashStringHelper * str)
 {
   if ( ! str)
@@ -2070,9 +2045,7 @@ char* AsyncHTTPRequest::_charstar(const __FlashStringHelper * str)
   // Return good ptr or nullptr
   return ptr;
 }
-////////////////////////////////////////
 
-#endif
 ////////////////////////////////////////
 
 #endif    // ASYNC_HTTP_REQUEST_ESP32_ETHERNET_IMPL_H

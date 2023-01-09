@@ -88,8 +88,8 @@
 
 #include <WebServer_ESP32_SC_ENC.h>               // https://github.com/khoih-prog/WebServer_ESP32_SC_ENC
 
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN_TARGET      "AsyncHTTPRequest_ESP32_Ethernet v1.13.0"
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN             1013000
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN_TARGET      "AsyncHTTPRequest_ESP32_Ethernet v1.14.0"
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN             1014000
 
 // Uncomment for certain HTTP site to optimize
 //#define NOT_SEND_HEADER_AFTER_CONNECTED        true

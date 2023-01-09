@@ -1,9 +1,9 @@
 /****************************************************************************************************************************
-  AsyncHTTPRequest_ESP32_ENC.ino
+  AsyncHTTPMultiRequests_ESP32_SC_W6100.ino
 
-  For ESP32 using LwIP W5500 / ENC28J60 / LAN8720 Ethernet
+  For ESP32 using LwIP W5500 / W6100 / ENC28J60 / LAN8720 Ethernet
 
-  AsyncHTTPRequest_ESP32_Ethernet is a library for ESP32 using LwIP W5500 / ENC28J60 / LAN8720 Ethernet
+  AsyncHTTPRequest_ESP32_Ethernet is a library for ESP32 using LwIP W5500 / W6100 / ENC28J60 / LAN8720 Ethernet
 
   Based on and modified from asyncHTTPrequest Library (https://github.com/boblemaire/asyncHTTPrequest)
 
@@ -46,8 +46,8 @@
 
 // Level from 0-4
 #define ASYNC_HTTP_DEBUG_PORT           Serial
-#define _ASYNC_HTTP_LOGLEVEL_           1
-#define _ETHERNET_WEBSERVER_LOGLEVEL_   1
+#define _ASYNC_HTTP_LOGLEVEL_           4
+#define _ETHERNET_WEBSERVER_LOGLEVEL_   4
 
 // 300s = 5 minutes to not flooding
 #define HTTP_REQUEST_INTERVAL     60  //300
@@ -55,23 +55,38 @@
 // 10s
 #define HEARTBEAT_INTERVAL        10
 
-/////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
+// For ESP32-S3
 // Optional values to override default settings
-//#define SPI_HOST            1
+//#define ETH_SPI_HOST        SPI2_HOST
 //#define SPI_CLOCK_MHZ       8
 
 // Must connect INT to GPIOxx or not working
 //#define INT_GPIO            4
 
-//#define MISO_GPIO           19
-//#define MOSI_GPIO           23
-//#define SCK_GPIO            18
-//#define CS_GPIO             5
+//#define MISO_GPIO           13
+//#define MOSI_GPIO           11
+//#define SCK_GPIO            12
+//#define CS_GPIO             10
 
-/////////////////////////////////////////////
+// For ESP32_C3
+// Optional values to override default settings
+// Don't change unless you know what you're doing
+//#define ETH_SPI_HOST        SPI2_HOST
+//#define SPI_CLOCK_MHZ       8
 
-#include <WebServer_ESP32_ENC.h>               // https://github.com/khoih-prog/WebServer_ESP32_ENC
+// Must connect INT to GPIOxx or not working
+//#define INT_GPIO            10
+
+//#define MISO_GPIO           5
+//#define MOSI_GPIO           6
+//#define SCK_GPIO            4
+//#define CS_GPIO             7
+
+//////////////////////////////////////////////////////////
+
+#include <WebServer_ESP32_SC_W6100.h>               // https://github.com/khoih-prog/WebServer_ESP32_SC_W6100
 
 #define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN_TARGET      "AsyncHTTPRequest_ESP32_Ethernet v1.14.0"
 #define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN             1014000
@@ -131,10 +146,10 @@ void heartBeatPrint(void)
 {
   static int num = 1;
 
-  if (ESP32_ENC_isConnected())
-    Serial.print(F("H"));        // H means connected
+  if (ESP32_W6100_isConnected())
+    Serial.print(F("H"));        // H means connected to WiFi
   else
-    Serial.print(F("F"));        // F means not connected
+    Serial.print(F("F"));        // F means not connected to WiFi
 
   if (num == 80)
   {
@@ -147,14 +162,34 @@ void heartBeatPrint(void)
   }
 }
 
+// To replace with your real APP_API
+#define APP_API       "SECRECT_APP_API"
+
+String requestPart1   = "http://api.openweathermap.org/data/2.5/onecall?lat=-24.32&lon=-46.9983";
+String requestAPPID   = "&appid=" + String(APP_API);
+
+// exclude fields: current,minutely,hourly,daily,alerts
+String requestCurrent   = requestPart1 + "&exclude=minutely,hourly,daily,alerts" + requestAPPID;
+String requestMinutely  = requestPart1 + "&exclude=current,hourly,daily,alerts" + requestAPPID;
+String requestHourly    = requestPart1 + "&exclude=current,minutely,daily,alerts" + requestAPPID;
+String requestDaily     = requestPart1 + "&exclude=current,minutely,hourly,alerts" + requestAPPID;
+String requestAlert     = requestPart1 + "&exclude=current,minutely,hourly,daily" + requestAPPID;
+
+#define NUM_REQUESTS    5
+
+const char* requestName[ NUM_REQUESTS ] = { "Current", "Minutely", "Hourly", "Daily", "Alert" };
+
+const char* requestAll[ NUM_REQUESTS ] = { requestCurrent.c_str(), requestMinutely.c_str(), requestHourly.c_str(), requestDaily.c_str(), requestAlert.c_str() };
+
+uint8_t requestIndex = 0;
+
 void sendRequest()
 {
   static bool requestOpenResult;
 
   if (request.readyState() == readyStateUnsent || request.readyState() == readyStateDone)
   {
-    //requestOpenResult = request.open("GET", "http://worldtimeapi.org/api/timezone/Europe/London.txt");
-    requestOpenResult = request.open("GET", "http://worldtimeapi.org/api/timezone/America/Toronto.txt");
+    requestOpenResult = request.open("GET", requestAll[requestIndex] );
 
     if (requestOpenResult)
     {
@@ -172,7 +207,7 @@ void sendRequest()
   }
 }
 
-void requestCB(void *optParm, AsyncHTTPRequest *request, int readyState)
+void requestCB(void* optParm, AsyncHTTPRequest* request, int readyState)
 {
   (void) optParm;
 
@@ -183,12 +218,30 @@ void requestCB(void *optParm, AsyncHTTPRequest *request, int readyState)
 
     if (request->responseHTTPcode() == 200)
     {
-      Serial.println(F("\n**************************************"));
+      Serial.print(F("\n***************"));
+      Serial.print(requestName[ requestIndex ]);
+      Serial.println(F("***************"));
       Serial.println(request->responseText());
       Serial.println(F("**************************************"));
     }
+
+#if 1
+
+    // Bypass hourly
+    if (requestIndex == 1)
+      requestIndex = 3;
+    else
+      requestIndex = (requestIndex + 1) % NUM_REQUESTS;
+
+#else
+    // hourly too long, not display anyway. Not enough heap.
+    requestIndex = (requestIndex + 1) % NUM_REQUESTS;
+#endif
+
+    request->setDebug(false);
   }
 }
+
 
 void setup()
 {
@@ -199,11 +252,11 @@ void setup()
 
   delay(500);
 
-  Serial.print("\nStart AsyncHTTPRequest_ESP32_ENC on ");
+  Serial.print("\nStart AsyncHTTPMultiRequests_ESP32_SC_W6100 on ");
   Serial.print(ARDUINO_BOARD);
   Serial.print(" with ");
   Serial.println(SHIELD_TYPE);
-  Serial.println(WEBSERVER_ESP32_ENC_VERSION);
+  Serial.println(WEBSERVER_ESP32_SC_W6100_VERSION);
   Serial.println(ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION);
 
   Serial.setDebugOutput(true);
@@ -219,6 +272,7 @@ void setup()
 #endif
 
   AHTTP_LOGWARN(F("Default SPI pinout:"));
+  AHTTP_LOGWARN1(F("SPI_HOST:"), ETH_SPI_HOST);
   AHTTP_LOGWARN1(F("MOSI:"), MOSI_GPIO);
   AHTTP_LOGWARN1(F("MISO:"), MISO_GPIO);
   AHTTP_LOGWARN1(F("SCK:"),  SCK_GPIO);
@@ -230,26 +284,24 @@ void setup()
   ///////////////////////////////////
 
   // To be called before ETH.begin()
-  ESP32_ENC_onEvent();
+  ESP32_W6100_onEvent();
 
   // start the ethernet connection and the server:
   // Use DHCP dynamic IP and random mac
-  uint16_t index = millis() % NUMBER_OF_MAC;
-
   //bool begin(int MISO_GPIO, int MOSI_GPIO, int SCLK_GPIO, int CS_GPIO, int INT_GPIO, int SPI_CLOCK_MHZ,
-  //           int SPI_HOST, uint8_t *ENC28J60_Mac = ENC28J60_Default_Mac);
-  //ETH.begin( MISO_GPIO, MOSI_GPIO, SCK_GPIO, CS_GPIO, INT_GPIO, SPI_CLOCK_MHZ, SPI_HOST );
-  ETH.begin( MISO_GPIO, MOSI_GPIO, SCK_GPIO, CS_GPIO, INT_GPIO, SPI_CLOCK_MHZ, SPI_HOST, mac[index] );
+  //           int SPI_HOST, uint8_t *W6100_Mac = W6100_Default_Mac);
+  ETH.begin( MISO_GPIO, MOSI_GPIO, SCK_GPIO, CS_GPIO, INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST );
+  //ETH.begin( MISO_GPIO, MOSI_GPIO, SCK_GPIO, CS_GPIO, INT_GPIO, SPI_CLOCK_MHZ, ETH_SPI_HOST, mac[millis() % NUMBER_OF_MAC] );
 
   // Static IP, leave without this line to get IP via DHCP
   //bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = 0, IPAddress dns2 = 0);
   //ETH.config(myIP, myGW, mySN, myDNS);
 
-  ESP32_ENC_waitForConnect();
+  ESP32_W6100_waitForConnect();
 
   ///////////////////////////////////
 
-  Serial.print(F("\nHTTP WebClient is @ IP : "));
+  Serial.print(F("AsyncHTTPRequest @ IP : "));
   Serial.println(ETH.localIP());
 
   request.setDebug(false);

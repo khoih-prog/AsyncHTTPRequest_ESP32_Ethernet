@@ -16,8 +16,8 @@
   #error This code is intended to run on the ESP32 using LwIP Ethernet W5500 or ENC28J60 ! Please check your Tools->Board setting.
 #endif
 
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN_TARGET      "AsyncHTTPRequest_ESP32_Ethernet v1.12.0"
-#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN             1012000
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN_TARGET      "AsyncHTTPRequest_ESP32_Ethernet v1.14.0"
+#define ASYNC_HTTP_REQUEST_ESP32_ETHERNET_VERSION_MIN             1014000
 
 #include "multiFileProject.h"
 

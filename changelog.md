@@ -17,6 +17,7 @@
 ## Table of Contents
 
 * [Changelog](#changelog)
+	* [Releases v1.14.0](#releases-v1140)
 	* [Releases v1.13.0](#releases-v1130)
 	* [Releases v1.12.0](#releases-v1120)
 
@@ -24,6 +25,10 @@
 ---
 
 ## Changelog
+
+### Releases v1.14.0
+
+1. Add support to `ESP32` and `ESP32S2/S3/C3` boards using `LwIP W6100 Ethernet`
 
 ### Releases v1.13.0
 

@@ -17,6 +17,7 @@
 ## Table of Contents
 
 * [Changelog](#changelog)
+	* [Releases v1.15.0](#releases-v1150)
 	* [Releases v1.14.0](#releases-v1140)
 	* [Releases v1.13.0](#releases-v1130)
 	* [Releases v1.12.0](#releases-v1120)
@@ -25,6 +26,11 @@
 ---
 
 ## Changelog
+
+### Releases v1.15.0
+
+1. Fix `_parseURL()` bug. Check [Bug with _parseURL() #21](https://github.com/khoih-prog/AsyncHTTPSRequest_Generic/issues/21)
+2. Improve `README.md` so that links can be used in other sites, such as `PIO`
 
 ### Releases v1.14.0
 

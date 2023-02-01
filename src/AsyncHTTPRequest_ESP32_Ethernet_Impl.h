@@ -18,12 +18,14 @@
   You should have received a copy of the GNU General Public License along with this program.
   If not, see <https://www.gnu.org/licenses/>.
 
-  Version: 1.13.0
+  Version: 1.15.0
 
   Version Modified By   Date      Comments
   ------- -----------  ---------- -----------
   1.12.0   K Hoang     16/12/2022 Initial coding to port to ESP32S3 boards using LwIP W5500 or ENC28J60 Ethernet
   1.13.0   K Hoang     21/12/2022 Add support to ESP32S2/C3 boards using LwIP W5500 or ENC28J60 Ethernet
+  1.14.0   K Hoang     09/01/2023 Add support to `ESP32` and `ESP32S2/S3/C3` boards using `LwIP W6100 Ethernet`
+  1.15.0   K Hoang     01/02/2023 Fix _parseURL() bug
  *****************************************************************************************************************************/
 
 #pragma once
@@ -1178,11 +1180,28 @@ bool  AsyncHTTPRequest::_parseURL(const String& url)
 
   int pathBeg = url.indexOf('/', hostBeg);
 
+  int hostEnd;
+  int portBeg;
+  
   if (pathBeg < 0)
-    return false;
+  {
+    if ( url.indexOf(':', hostBeg) < 0 )
+    {
+      // No port, just https://www.aaa.com
+      hostEnd = url.length();
+    }
+    else
+    {
+      // with port, https://www.aaa.com:443
+      hostEnd = url.indexOf(':', hostBeg);
+    }
+  }
+  else
+  {
+    hostEnd = pathBeg;
+  }
 
-  int hostEnd = pathBeg;
-  int portBeg = url.indexOf(':', hostBeg);
+  portBeg = url.indexOf(':', hostBeg);
 
   if (portBeg > 0 && portBeg < pathBeg)
   {
